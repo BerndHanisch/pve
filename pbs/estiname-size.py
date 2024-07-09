@@ -3,6 +3,8 @@
 # taken from:
 # https://forum.proxmox.com/threads/how-to-get-the-exactly-backup-size-in-proxmox-backup.93901/
 # by "masgo" 2023-03-27
+# add --namespace option 2024-07-09
+# example: ./estiname-size.py /mnt/pbs-backups --namespace NSLevel1 NSLevel2 
 
 import os
 import sys
@@ -11,7 +13,7 @@ import json
 
 format_json = False
 all = False
-datastore_path = "/mnt/datastore"
+datastore_path = "/mnt/pbs-backups/"
 
 
 def scan_vmid(datastore, vmid, all):
@@ -86,6 +88,8 @@ if __name__ == "__main__":
                     help="datastore to look in, also takes full path to alternative location")
     parser.add_argument('vmids', metavar='vmids', type=str, nargs='*',
                     help='vmid(s) to scan for backups')
+    parser.add_argument('--namespace', metavar='namespace', type=str, nargs='*',
+                    help="optional namespace to look in", default=[])
     parser.add_argument('-j', '--json', action='store_const',
                     const=True, default=False,
                     help='enable json output')
@@ -102,6 +106,11 @@ if __name__ == "__main__":
         datastore_path = args.datastore
     else:
         datastore_path = os.path.join(datastore_path, args.datastore)
+
+    if len(args.namespace) > 0:
+        for ns in args.namespace:
+            datastore_path = os.path.join(datastore_path, "ns", ns)
+
     datastore_path = os.path.join(datastore_path,"vm")
     if len(args.vmids) == 0:
         vmids_list = []
